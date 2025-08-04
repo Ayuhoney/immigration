@@ -1,10 +1,15 @@
-import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
+
+# Import your routers
 from app.routes import auth, upload, user_info
 
-app = FastAPI()
+# Create FastAPI instance
+app = FastAPI(
+    title="Immigration Backend API",
+    description="API for immigration services",
+    version="1.0.0"
+)
 
 # Add CORS middleware
 app.add_middleware(
@@ -22,17 +27,8 @@ app.include_router(user_info.router)
 
 @app.get("/")
 async def root():
-    return {"message": "Immigration Backend API is running!"}
+    return {"message": "Immigration Backend API is running!", "status": "healthy"}
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(
-         "app.main:app", 
-        host="0.0.0.0", 
-        port=port,
-        reload=False  
-    )
+    return {"status": "healthy", "message": "Service is running"}
