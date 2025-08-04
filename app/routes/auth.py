@@ -12,7 +12,7 @@ async def signup(user: SignupModel):
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    user_id = f"user_{uuid.uuid4().hex[:8]}"  # example: user_1a2b3c4d
+    user_id = f"user_{uuid.uuid4().hex[:8]}"
     user_dict = user.model_dump()
     user_dict["user_id"] = user_id
     user_dict["password"] = hash_password(user.password)
@@ -22,7 +22,8 @@ async def signup(user: SignupModel):
         "message": "User registered successfully",
         "user_id": user_id,
         "name": user.name,
-        "email": user.email
+        "email": user.email,
+        "phone_number": user.phone_number
     }
 
 @router.post("/login")
@@ -37,5 +38,6 @@ async def login(user: LoginModel):
         "idToken": id_token,
         "user_id": db_user.get("user_id"),
         "name": db_user.get("name"),
-        "email": db_user.get("email")
+        "email": db_user.get("email"),
+        "phone_number": db_user.get("phone_number")
     }
