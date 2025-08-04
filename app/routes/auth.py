@@ -8,36 +8,61 @@ router = APIRouter()
 
 @router.post("/signup")
 async def signup(user: SignupModel):
-    existing = await db.users.find_one({"email": user.email})
-    if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
+    try:
+        # Use await with Motor's async find_one
+        existing = await db.users.find_one({"email": user.email})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already registered")
 
-    user_id = f"user_{uuid.uuid4().hex[:8]}"
-    user_dict = user.model_dump()
-    user_dict["user_id"] = user_id
-    user_dict["password"] = hash_password(user.password)
+        user_id = f"user_{uuid.uuid4().hex[:8]}"
+        user_dict = user.model_dump()
+        user_dict["user_id"] = user_id
+        user_dict["password"] = hash_password(user.password)
 
-    await db.users.insert_one(user_dict)
-    return {
-        "message": "User registered successfully",
-        "user_id": user_id,
-        "name": user.name,
-        "email": user.email,
-        "phone_number": user.phone_number
-    }
+        # Use await with Motor's async insert_one
+        await db.users.insert_one(user_dict)
+        return {
+            "message": "User registered successfully",
+            "user_id": user_id,
+            "name": user.name,
+            "email": user.email,
+            "phone_number": user.phone_number
+        }
+    except Exception as e:
+        print(f"Signup error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.post("/login")
 async def login(user: LoginModel):
-    db_user = await db.users.find_one({"email": user.email})
-    if not db_user or not verify_password(user.password, db_user["password"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+    try:
+        # Use await with Motor's async find_one
+        db_user = await db.users.find_one({"email": user.email})
+        if not db_user or not verify_password(user.password, db_user["password"]):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    id_token = create_id_token(data={"sub": user.email})
+        id_token = create_id_token(data={"sub": user.email})
 
-    return {
-        "idToken": id_token,
-        "user_id": db_user.get("user_id"),
-        "name": db_user.get("name"),
-        "email": db_user.get("email"),
-        "phone_number": db_user.get("phone_number")
-    }
+        return {
+            "idToken": id_token,
+            "user_id": db_user.get("user_id"),
+            "name": db_user.get("name"),
+            "email": db_user.get("email"),
+            "phone_number": db_user.get("phone_number")
+        }
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        print(f"Login error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+# Optional: Add connection testing
+@router.get("/health")
+async def health_check():
+    try:
+        # Test database connection
+        await db.command("ping")
+        return {"status": "healthy", "database": "connected"}
+    except Exception as e:
+        print(f"Database connection error: {e}")
+        raise HTTPException(status_code=503, detail="Database unavailable")
