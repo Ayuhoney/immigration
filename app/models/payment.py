@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 class PaymentRequest(BaseModel):
@@ -20,3 +20,10 @@ class PaymentRecord(BaseModel):
     currency: str
     status: str  # created, paid, failed
     timestamp: datetime
+
+# New model for user transaction collection
+class UserTransactions(BaseModel):
+    user_id: str
+    transactions: List[PaymentRecord] = []
+    total_paid: float = 0.0  # Total amount paid by user
+    transaction_count: int = 0
