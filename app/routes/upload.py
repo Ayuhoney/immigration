@@ -8,7 +8,7 @@ from app.utils.auth import get_current_user
 router = APIRouter(
     prefix="/upload",
     tags=["upload"],
-    # dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user)]
 )
 
 # ⬆️ Upload PDF using user email
