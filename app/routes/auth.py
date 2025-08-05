@@ -9,18 +9,20 @@ router = APIRouter()
 @router.post("/signup")
 async def signup(user: SignupModel):
     try:
-        # Use await with Motor's async find_one
-        existing = await db.users.find_one({"email": user.email})
-        if existing:
+        # Check if user already exists
+        existing_user = await db.users.find_one({"email": user.email})
+        if existing_user:
+            # Explicitly raise and handle known condition
             raise HTTPException(status_code=400, detail="Email already registered")
 
+        # Prepare user dict
         user_id = f"user_{uuid.uuid4().hex[:8]}"
         user_dict = user.model_dump()
         user_dict["user_id"] = user_id
         user_dict["password"] = hash_password(user.password)
 
-        # Use await with Motor's async insert_one
         await db.users.insert_one(user_dict)
+
         return {
             "message": "User registered successfully",
             "user_id": user_id,
@@ -28,9 +30,15 @@ async def signup(user: SignupModel):
             "email": user.email,
             "phone_number": user.phone_number
         }
+
+    except HTTPException as http_ex:
+        # Re-raise known handled errors like 400
+        raise http_ex
+
     except Exception as e:
-        print(f"Signup error: {e}")
+        print(f"Unhandled signup error: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
 
 @router.post("/login")
 async def login(user: LoginModel):
