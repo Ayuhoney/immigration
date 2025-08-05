@@ -194,7 +194,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Dict
-from datetime import datetime
+from datetime import datetime, timezone
 import hmac
 import hashlib
 
@@ -220,7 +220,7 @@ async def add_payment_record(user_id, order_id, amount, currency, status):
         "amount": amount,
         "currency": currency,
         "status": status,
-        "timestamp": datetime.now()
+        "timestamp": datetime.now(timezone.utc())
     }
     
     # Add to main payment database
