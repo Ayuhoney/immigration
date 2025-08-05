@@ -203,7 +203,7 @@ from app.models.payment import PaymentRequest, VerifyRequest
 from app.utils.auth import get_current_user
 from app.database import db  
 
-router = APIRouter(prefix="/payment", tags=["Payment"])
+router = APIRouter(prefix="/payment", tags=["Payment"],dependencies=[Depends(get_current_user)]  )
 
 # Collections using your existing db connection
 payment_collection = db.payments  # All payments
