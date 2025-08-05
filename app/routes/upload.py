@@ -61,8 +61,12 @@ async def get_user_pdf(user_id: str):
     if not doc:
         raise HTTPException(status_code=404, detail="No PDF found for this user")
 
-    return StreamingResponse(
-        BytesIO(doc["file_data"]),
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"inline; filename={doc['filename']}"}
-    )
+    pdf_stream = BytesIO(doc["file_data"])
+    headers = {
+        "Content-Disposition": f'inline; filename="{doc["filename"]}"',
+        "Content-Type": "application/pdf",
+        "Content-Length": str(len(doc["file_data"])),
+        "Cache-Control": "no-cache"
+    }
+
+    return StreamingResponse(pdf_stream, media_type="application/pdf", headers=headers)
