@@ -8,15 +8,16 @@ from app.utils.auth import get_current_user
 router = APIRouter(
     prefix="/upload",
     tags=["upload"],
-    dependencies=[Depends(get_current_user)]  
+    dependencies=[Depends(get_current_user)]
 )
 
+# ⬆️ Upload PDF using user email
 @router.post("/doc")
 async def upload_doc(
-    user_id: str = Form(...),
+    email: str = Form(...),
     file: UploadFile = File(...)
 ):
-    user = await db.users.find_one({"user_id": user_id})
+    user = await db.users.find_one({"email": email})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -24,14 +25,14 @@ async def upload_doc(
         raise HTTPException(status_code=400, detail="Only PDF files are allowed")
 
     existing_doc = await db.documents.find_one({
-        "user_id": user_id,
+        "email": email,
         "filename": file.filename
     })
 
     if existing_doc:
         return {
             "message": "File already exists for this user",
-            "user_id": user_id,
+            "email": email,
             "filename": file.filename,
             "status": existing_doc["status"]
         }
@@ -39,7 +40,7 @@ async def upload_doc(
     pdf_content = await file.read()
 
     doc = Document(
-        user_id=user_id,
+        email=email,
         filename=file.filename,
         status="Submitted",
         file_data=pdf_content
@@ -48,7 +49,7 @@ async def upload_doc(
 
     return {
         "message": "PDF uploaded and saved in MongoDB",
-        "user_id": user_id,
+        "email": email,
         "filename": file.filename,
         "status": doc.status
     }
