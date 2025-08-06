@@ -8,13 +8,13 @@ from app.utils.auth import get_current_user
 router = APIRouter(
     prefix="/upload",
     tags=["upload"],
-    dependencies=[Depends(get_current_user)]
+    # dependencies=[Depends(get_current_user)]
 )
-
-# ⬆️ Upload PDF using user email
 @router.post("/doc")
 async def upload_doc(
     email: str = Form(...),
+    status: str = Form(...),
+    visa_type: str = Form(...),
     file: UploadFile = File(...)
 ):
     user = await db.users.find_one({"email": email})
@@ -42,22 +42,27 @@ async def upload_doc(
     doc = Document(
         email=email,
         filename=file.filename,
-        status="Submitted",
+        status=status,          # ✅ saving status
+        visa_type=visa_type,    # ✅ saving visa_type
         file_data=pdf_content
     )
-    await db.documents.insert_one(doc.model_dump())
+
+    await db.documents.insert_one(doc.model_dump()) 
 
     return {
         "message": "PDF uploaded and saved in MongoDB",
         "email": email,
         "filename": file.filename,
-        "status": doc.status
+        "status": doc.status,
+        "visa_type": doc.visa_type
     }
 
+
+
 # ⬇️ Retrieve PDF
-@router.get("/doc/{user_id}")
-async def get_user_pdf(user_id: str):
-    doc = await db.documents.find_one({"user_id": user_id})
+@router.get("/doc/{email}")
+async def get_user_pdf(email: str):
+    doc = await db.documents.find_one({"email":email})
     if not doc:
         raise HTTPException(status_code=404, detail="No PDF found for this user")
 

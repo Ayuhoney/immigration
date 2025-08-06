@@ -4,5 +4,6 @@ from typing import Optional
 class Document(BaseModel):
     email: str
     filename: str
-    status: Optional[str] = "Pending"  
-    file_data: bytes 
+    visa_type: str      
+    status: Optional[str] = "Pending"  # status like "Submitted", "Reviewed", etc.
+    file_data: bytes
