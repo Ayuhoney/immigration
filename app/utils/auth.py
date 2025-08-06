@@ -12,7 +12,7 @@ load_dotenv()
 # ─── Configuration ───────────────────────────────────────────────────────────────
 SECRET_KEY: str = os.getenv("JWT_SECRET", "dev-only-secret") 
 ALGORITHM:   str = os.getenv("JWT_ALGORITHM", "HS256")
-TOKEN_TTL_MINUTES: int = int(os.getenv("ID_TOKEN_EXPIRE_MINUTES", 30))
+TOKEN_TTL_MINUTES: int = int(os.getenv("ID_TOKEN_EXPIRE_MINUTES", 180))
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
