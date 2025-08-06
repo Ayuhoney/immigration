@@ -8,7 +8,7 @@ from app.utils.auth import get_current_user
 router = APIRouter(
     prefix="/upload",
     tags=["upload"],
-    # dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user)]
 )
 @router.post("/doc")
 async def upload_doc(
@@ -59,19 +59,22 @@ async def upload_doc(
 
 
 
-# ⬇️ Retrieve PDF
 @router.get("/doc/{email}")
 async def get_user_pdf(email: str):
-    doc = await db.documents.find_one({"email":email})
+    doc = await db.documents.find_one({"email": email})
     if not doc:
         raise HTTPException(status_code=404, detail="No PDF found for this user")
 
     pdf_stream = BytesIO(doc["file_data"])
+
     headers = {
         "Content-Disposition": f'inline; filename="{doc["filename"]}"',
         "Content-Type": "application/pdf",
         "Content-Length": str(len(doc["file_data"])),
-        "Cache-Control": "no-cache"
+        "Cache-Control": "no-cache",
+        "X-Filename": doc["filename"],         # ✅ custom header
+        "X-Visa-Type": doc["visa_type"],       # ✅ custom header
+        "X-Status": doc["status"]              # ✅ custom header
     }
 
     return StreamingResponse(pdf_stream, media_type="application/pdf", headers=headers)
