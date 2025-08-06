@@ -17,47 +17,64 @@ async def upload_doc(
     visa_type: str = Form(...),
     file: UploadFile = File(...)
 ):
+    # Check if user exists
     user = await db.users.find_one({"email": email})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
+    
+    # Validate file type
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed")
-
-    existing_doc = await db.documents.find_one({
-        "email": email,
-        "filename": file.filename
-    })
-
+    
+    # Read the PDF content
+    pdf_content = await file.read()
+    
+    # Check if document exists for this email
+    existing_doc = await db.documents.find_one({"email": email})
+    
     if existing_doc:
+        # Update existing document with new data
+        update_data = {
+            "filename": file.filename,
+            "status": status,
+            "visa_type": visa_type,
+            "file_data": pdf_content
+        }
+        
+        await db.documents.update_one(
+            {"email": email},
+            {"$set": update_data}
+        )
+        
         return {
-            "message": "File already exists for this user",
+            "message": "Document updated successfully",
             "email": email,
             "filename": file.filename,
-            "status": existing_doc["status"]
+            "status": status,
+            "visa_type": visa_type,
+            "action": "updated"
         }
-
-    pdf_content = await file.read()
-
-    doc = Document(
-        email=email,
-        filename=file.filename,
-        status=status,          # ✅ saving status
-        visa_type=visa_type,    # ✅ saving visa_type
-        file_data=pdf_content
-    )
-
-    await db.documents.insert_one(doc.model_dump()) 
-
-    return {
-        "message": "PDF uploaded and saved in MongoDB",
-        "email": email,
-        "filename": file.filename,
-        "status": doc.status,
-        "visa_type": doc.visa_type
-    }
-
-
+    
+    else:
+        # Insert new document
+        doc = Document(
+            email=email,
+            filename=file.filename,
+            status=status,
+            visa_type=visa_type,
+            file_data=pdf_content
+        )
+        
+        await db.documents.insert_one(doc.model_dump())
+        
+        return {
+            "message": "New document uploaded and saved in MongoDB",
+            "email": email,
+            "filename": file.filename,
+            "status": status,
+            "visa_type": visa_type,
+            "action": "created"
+        }
 
 # ⬇️ Retrieve PDF
 @router.get("/doc/{email}")
