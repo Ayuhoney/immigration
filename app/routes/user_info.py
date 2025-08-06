@@ -17,10 +17,6 @@ async def submit_user_info(info: UserPersonalInfo):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    existing = await db.user_info.find_one({"user_id": info.user_id})
-    if existing:
-        raise HTTPException(status_code=400, detail="User info already exists")
-
     data = info.model_dump()
 
     # ✅ Convert all `date` objects to ISO string
@@ -28,7 +24,9 @@ async def submit_user_info(info: UserPersonalInfo):
         if isinstance(value, date):
             data[key] = value.isoformat()
 
+    # ✅ Always insert, even if user_id already exists
     await db.user_info.insert_one(data)
+
     return {
         "message": "User personal info saved successfully",
         "user_id": info.user_id
