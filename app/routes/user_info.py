@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from app.models.user_info import UserPersonalInfo, UserIdRequest
 from app.database import db
 from app.utils.auth import get_current_user
-from datetime import date
+from datetime import date, datetime
 
 router = APIRouter(
     prefix="/userInfo",
@@ -18,18 +18,18 @@ class FieldRequest(BaseModel):
 # ✅ Save user personal info
 @router.post("/submit")
 async def submit_user_info(info: UserPersonalInfo):
-    user = await db.users.find_one({"user_id": info.user_id})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
     data = info.model_dump()
 
-    # ✅ Convert all `date` objects to ISO string
+    # ✅ Convert all `date` objects to ISO strings
     for key, value in data.items():
         if isinstance(value, date):
             data[key] = value.isoformat()
 
-    # ✅ Always insert, even if user_id already exists
+    # ✅ Add submitted_date in "19-July-2025" format
+    submitted_date = datetime.now().strftime("%d-%B-%Y")
+    data["submitted_date"] = submitted_date
+
+    # ✅ Insert directly without checking user_id existence
     await db.user_info.insert_one(data)
 
     return {
