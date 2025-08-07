@@ -29,8 +29,15 @@ async def submit_user_info(info: UserPersonalInfo):
     submitted_date = datetime.now().strftime("%d-%B-%Y")
     data["submitted_date"] = submitted_date
 
-    # ✅ Insert directly without checking user_id existence
-    await db.user_info.insert_one(data)
+    # ✅ Check if user_id exists, then update or insert
+    existing_user = await db.user_info.find_one({"user_id": info.user_id})
+    if existing_user:
+        await db.user_info.update_one(
+            {"user_id": info.user_id},
+            {"$set": data}
+        )
+    else:
+        await db.user_info.insert_one(data)
 
     return {
         "message": "User personal info saved successfully",
