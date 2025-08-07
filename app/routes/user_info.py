@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
 from app.models.user_info import UserPersonalInfo, UserIdRequest
 from app.database import db
 from app.utils.auth import get_current_user
@@ -9,6 +10,10 @@ router = APIRouter(
     tags=["userInfo"],
     dependencies=[Depends(get_current_user)]
 )
+
+class FieldRequest(BaseModel):
+    user_id: str
+    fieldName: str
 
 # ✅ Save user personal info
 @router.post("/submit")
@@ -50,3 +55,27 @@ async def get_user_info(payload: UserIdRequest):
             "user_data_found": False,
             "greeting": "No data available"
         }
+
+
+@router.post("/SvisaType")
+async def save_field_name_to_visa_type(payload: FieldRequest):
+    await db.visa_type.insert_one({
+        "user_id": payload.user_id,
+        "field_name": payload.fieldName
+    })
+
+    return {
+        "message": f"Field name '{payload.fieldName}' saved to visa_type collection for user {payload.user_id}"
+    }
+
+    
+@router.get("/SvisaType/{user_id}")
+async def get_field_name_from_visa_type(user_id: str):
+    record = await db.visa_type.find_one({"user_id": user_id})
+
+    if not record:
+        raise HTTPException(status_code=404, detail="No visa_type data found for this user")
+
+    return {
+        "visa_type": record["field_name"]
+    }
