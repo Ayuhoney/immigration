@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import warnings
 warnings.filterwarnings("ignore", message="pkg_resources is deprecated")
 
-from app.routes import auth, upload, user_info,admin
+from app.routes import auth, upload, user_info,admin, visa_user_details
 from app.routes import payment
 
 app = FastAPI(
@@ -25,6 +25,7 @@ app.include_router(upload.router)
 app.include_router(user_info.router)
 app.include_router(payment.router)
 app.include_router(admin.router)  
+app.include_router(visa_user_details.router)
 
 
 @app.get("/")
