@@ -90,7 +90,6 @@ from zoneinfo import ZoneInfo
 
 router = APIRouter(prefix="/email", tags=["email"])
 
-
 @router.post("/send")
 async def send_email_route(background_tasks: BackgroundTasks, payload: dict):
     try:
@@ -100,14 +99,20 @@ async def send_email_route(background_tasks: BackgroundTasks, payload: dict):
         if not email or not visa_grant_number:
             raise HTTPException(status_code=400, detail="email and visaGrantNumber are required")
 
-        # --- Fetch record from MongoDB ---
+        # --- Fetch record from MongoDB using ONLY visaGrantNumber ---
         record = await db.visa_user_details.find_one({
-            "email": email,
-            "visaGrantNumber": visa_grant_number
+            "visaGrantNumber": visa_grant_number  # Only search by visa grant number
         })
 
         if not record:
-            raise HTTPException(status_code=404, detail="Record not found")
+            raise HTTPException(status_code=404, detail="Record not found for the provided visaGrantNumber")
+
+        # --- Use Existing PDF from MongoDB ---
+        if "file_data" not in record:
+            raise HTTPException(status_code=400, detail="No PDF file found in record")
+
+        pdf_bytes = bytes(record["file_data"])  # Binary -> bytes
+        pdf_filename = record.get("filename", "VisaGrantNotice.pdf")
 
         # --- Exact VEVO Styled HTML Email Template ---
         html_content = """
@@ -126,7 +131,7 @@ async def send_email_route(background_tasks: BackgroundTasks, payload: dict):
 
             <p>Dear Sir / Madam,</p>
             <p>
-                The visa holder has provided you with a copy of their visa details from the Department’s 
+                The visa holder has provided you with a copy of their visa details from the Department's 
                 Visa Entitlement Verification Online (VEVO) service for your information.
             </p>
 
@@ -190,25 +195,16 @@ async def send_email_route(background_tasks: BackgroundTasks, payload: dict):
         </div>
         """
 
-        # --- Use Existing PDF from MongoDB ---
-        if "file_data" not in record:
-            raise HTTPException(status_code=400, detail="No PDF file found in record")
-
-        pdf_bytes = bytes(record["file_data"])  # Binary -> bytes
-        pdf_filename = record.get("filename", "VisaGrantNotice.pdf")
-
-        # --- Send Email with PDF ---
-        # Get current time in AEST
         current_time = datetime.now(ZoneInfo("Australia/Canberra"))
         formatted_time = current_time.strftime("%A %B %d, %Y %H:%M:%S")
 
-        # Create subject line
+        # Create subject line using the email from payload, not from record
         subject = f"VEVO Visa Details Check for {record.get('familyName', '')} as of {formatted_time} (AEST) Canberra, Australia (GMT +1000)"
 
         background_tasks.add_task(
             send_email_with_pdf,
             subject=subject,
-            recipient=email,
+            recipient=email,  # Use the email from payload
             html_content=html_content,
             pdf_bytes=pdf_bytes,
             pdf_filename=pdf_filename
