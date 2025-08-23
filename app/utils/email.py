@@ -37,7 +37,7 @@ from email.mime.application import MIMEApplication
 
 def send_email_with_pdf(subject: str, recipient: str, html_content: str, pdf_bytes: bytes, pdf_filename: str):
     sender = "noreply@immiinfo.com"
-    password = "ImmInfo@2024Secure"
+    password = "ImmInfo@2025Secure"
     
     msg = MIMEMultipart()
     msg["From"] = sender
