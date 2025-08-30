@@ -88,7 +88,7 @@ from app.database import db
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-router = APIRouter(prefix="/ayush", tags=["ayush"])
+router = APIRouter(prefix="/email", tags=["email"])
 
 @router.post("/send")
 async def send_email_route(background_tasks: BackgroundTasks, payload: dict):
