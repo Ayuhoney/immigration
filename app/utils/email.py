@@ -61,6 +61,6 @@ def send_email_with_pdf(subject: str, recipient: str, html_content: str, pdf_byt
         server.ehlo()
         server.login(sender, password)
         server.send_message(msg)
-        print("✅ Email sent successfully via GoDaddy SMTP")
+
 
 
