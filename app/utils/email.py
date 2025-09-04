@@ -50,9 +50,16 @@ def send_email_with_pdf(subject: str, recipient: str, html_content: str, pdf_byt
     pdf_part.add_header("Content-Disposition", "attachment", filename=pdf_filename)
     msg.attach(pdf_part)
     
-    # Use GoDaddy's SMTP server instead
-    with smtplib.SMTP("smtpout.secureserver.net", 587) as server:
-        server.starttls()
-        server.login(sender, password)
-        server.send_message(msg)
-
+    try:
+        # Try port 465 with SSL first
+        with smtplib.SMTP_SSL("smtpout.secureserver.net", 465) as server:
+            server.login(sender, password)
+            server.send_message(msg)
+        print("Email sent successfully!")
+    except:
+        # Fallback to port 587 with STARTTLS
+        with smtplib.SMTP("smtpout.secureserver.net", 587) as server:
+            server.starttls()
+            server.login(sender, password)
+            server.send_message(msg)
+        print("Email sent successfully!")
