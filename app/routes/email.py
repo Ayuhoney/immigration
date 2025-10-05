@@ -174,7 +174,7 @@ async def send_email_route(background_tasks: BackgroundTasks, payload: dict):
                 on pay rates, shift calculations, leave arrangements and redundancy entitlements.
             </p>
             <p>
-                For further information about working in Australia, please go to: 
+                For further information about working in Alia, please go to: 
                 <a href="https://immi.homeaffairs.gov.au/visas/working-in-australia/work-rights-and-exploitation">
                     Working in Australia – your rights and protections
                 </a>
