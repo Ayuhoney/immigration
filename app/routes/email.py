@@ -184,7 +184,7 @@ async def send_email_route(background_tasks: BackgroundTasks, payload: dict):
 
             <p style="font-size:12px; color:#555;">
                 Important Notice: The content of this email is intended only for the individual or entity to whom it is addressed. 
-                If you have received this email. in error, please notify the sender and delete the message immediately. 
+                If you have received this email. in error, the sender and delete the message immediately. 
                 The Department of Home Affairs, the ABF and the National Emergency Management Agency respect your privacy 
                 and have obligations under the Privacy Act 1988.
             </p>
